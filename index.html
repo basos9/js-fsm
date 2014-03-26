@@ -29,8 +29,12 @@
         {event: "john", to: 'upda'}
      ];
 
-    states['updb'] = [];
-    states['upda'] = [{cond: {status: '*'}, to: 'updb'}];
+    states['updb'] = [
+      {cond: [{status: 1}, {status: 2}], to: 'upda'}
+    ];
+    states['upda'] = [
+      {cond: {status: '*'}, to: 'updb'}
+    ];
     states['initial'] = 'init';
 
     var sm = new StateMachine(states);
@@ -53,10 +57,15 @@
     StateMachine.mixin(K.prototype);
 
     var m = new K();
+    m.log=log;
 
     console.log("m");
     m.stmOnEvent("john");
     m.stmOnCondition({status: 5});
+    m.stmOnCondition({status: 555});
+    m.stmOnCondition({status: 1});
+    m.stmOnCondition({status: 1});
+    m.stmOnCondition({status: 2});
 
 })();
   </script>
