@@ -38,14 +38,28 @@
    * @returns {Boolean}
    */
   StateMachine.isArray = typeof Array.isArray !== 'undefined' ? Array.isArray :
-        function(value) {
-        return value != null && Object.prototype.toString.call(value) === '[object Array]'; // undef or null
-      }; // end Array.isArray
+    function(value) {
+      return value != null && Object.prototype.toString.call(value) === '[object Array]'; // undef or null
+    }; // end Array.isArray
+
+  /**
+   * Object create shim
+   * Creates a prototype clone of the source object
+   * @param o source Object
+   * @return Object a new object
+   */
+  StateMachine.create = typeof Object.create !== 'undefined' ? Object.create :
+    function(o) {
+      var Func;
+      Func = function() {};
+      Func.prototype = o;
+      return new Func();
+    };
 
   StateMachine.prototype = {
     stmInit: function (states) {
       var initial,
-        i, e, j, f, k, z;
+        i, e, j, f, k, z, n;
       this.log = this.log || function(){};
 
       this.states = states;
@@ -73,6 +87,18 @@
                 e._events[z] = f;
               }
               e.splice(j, 1); // splice ok on reverse read array
+            }
+            else if ((z = f.cond)) {
+              if (StateMachine.isArray(z)) {
+                for (k=z.length; k--; ) {
+                  n = StateMachine.create(f); // clone proto
+                  n.cond = z[k]; // mask cond
+                  e.push(n); // append ok on reverse read array
+                }
+                // delete ref to original cond array
+                // member objects of this array are still referenced by n objects above with cond property masked
+                e.splice(j, 1); // splice ok on reverse read array
+              }
             }
           }
       }
@@ -131,7 +157,7 @@
     },
 
     stmGetStatus: function(){
-      return this.currentState.name;
+      return this.currentState._name;
     }
   };
 
