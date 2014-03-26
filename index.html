@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Javascript Basos Finite State Machine</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+</head>
+
+
+<body>
+
+  <script src="stm.js"></script>
+  <script type="text/javascript">
+(function() {
+
+    function log(a){
+      console && console.log(a);
+    }
+
+    function show(){
+      console.log("SHOW: ");
+    }
+
+    var states = {};
+    states['init'] = [
+
+        {cond: {status: 1}, to: 'upda', action: show},
+        {cond: {status: 2}, to: 'upda'},
+
+        {event: "john", to: 'upda'}
+     ];
+
+    states['updb'] = [];
+    states['upda'] = [{cond: {status: '*'}, to: 'updb'}];
+    states['initial'] = 'init';
+
+    var sm = new StateMachine(states);
+
+    sm.log = log;
+
+    sm.stmOnCondition({status: 5});
+
+    sm.stmOnCondition({status: 1});
+
+    sm.stmOnCondition({status: 1});
+
+    sm.stmOnCondition({status: 8});
+
+
+    var K = function K() {
+      this.stmInit(states);
+    }
+
+    StateMachine.mixin(K.prototype);
+
+    var m = new K();
+
+    console.log("m");
+    m.stmOnEvent("john");
+    m.stmOnCondition({status: 5});
+
+})();
+  </script>
+</body>
