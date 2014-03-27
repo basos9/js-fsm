@@ -76,6 +76,10 @@
             f = e[j];
             if (!f.to) throw new Error("Missing to member");
             if (!states[f.to]) throw new Error("State not defined "+f.to);
+            z = f.action;
+            if (StateMachine.isArray(z)) z = z[0];
+            if (typeof z === 'string' && ! (z in this))
+              throw new Error("Member action "+z+" not found");
             if ( (z = f.event)) {
               // event transition from this state
               if (StateMachine.isArray(z)) {
@@ -110,11 +114,16 @@
 
     },
 
-    _stmAction: function(f) {
-      if (StateMachine.isArray(f))
-        return f[0].apply(this. f[1] || []);
-      else if (f)
-        return f.apply(this);
+    _stmAction: function(fn) {
+      var args;
+      if (StateMachine.isArray(fn)) {
+        args = StateMachine.isArray(fn[1]) ? fn[1] : [fn[1]];
+        fn = fn[0];
+      }
+      if (fn) {
+        if (typeof fn === 'string') fn = this[fn];
+        fn.apply(this, args);
+      }
     },
 
     stmOnEvent: function(e){
