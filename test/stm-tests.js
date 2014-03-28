@@ -38,9 +38,11 @@
       'upda': [
         {cond: {trig: 7, lek: 15}, to: 'updb'},
         {cond: {trig: 10, lek: GLOB}, to: 'init'},
-        // WARNING when glob in one argument and other cases
+        {cond: {status: 20}, to: 'upda', action: show},
+        // WARNING when glob and xtra args exist, no switch
         {cond: {status: GLOB}, to: 'updb'},
-        {cond: {status: GLOB}, to: 'updb'}
+        // THIS is not masked
+        {cond: {status: 30}, to: 'init'}
       ],
 
       'updb': [
@@ -92,7 +94,8 @@
       strictEqual(sm.stmGetStatus(), 'init', 'Does not switch on glob keys when not match');
       sm.stmOnCondition({others: 6, lek: 10});
       strictEqual(sm.stmGetStatus(), 'upda', 'Switch from glob keys when provided match');
-
+      sm.stmOnCondition({status: 30});
+      strictEqual(sm.stmGetStatus(), 'init', 'State Transitions Order does not matter');
     });
 
     test("Event state transitions", function(){
@@ -115,6 +118,10 @@
       strictEqual(sm.stmGetStatus(), 'upda', 'Status OK');
       ok(show.call, "Action called");
       equal(show.arg.length, 0, "Action args not passed");
+      show.reset();
+      sm.stmOnCondition({status: 20});
+      strictEqual(sm.stmGetStatus(), 'upda', 'State OK');
+      strictEqual(show.call, 1, "Switch to self");
     });
 
     test("Actions with args on cond state transitions", function(){
