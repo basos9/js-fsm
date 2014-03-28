@@ -7,25 +7,26 @@
     function show(){
       console.log("SHOW: ");
       // ok(true, "Action called");
-      show.call = true;
+      show.call++;
       show.arg = Array.prototype.slice.call(arguments,0);
     }
 
     show.reset = function(){
-      show.call = false;
+      show.call = 0;
       show.arg = void 0;
     }
 
     show.reset();
 
     var states = {};
-    var memTans = {cond: {status: 5}, to: 'upda', action: ["sjohn", "john"]};
+    var memTans = {cond: {status: 5}, to: 'upda', action: {f: "sjohn", a: "john"}};
     states['init'] = [
 
       {cond: {status: 1}, to: 'upda', action: show},
       {cond: {status: 2}, to: 'upda'},
-      {cond: {status: 3}, to: 'upda', action: [show, "john"]},
-      {cond: {status: 4}, to: 'upda', action: [show, ["john"]]},
+      {cond: {status: 3}, to: 'upda', action: {f: show, a: "john"}},
+      {cond: {status: 4}, to: 'upda', action: {f: show, a: ["john"]}},
+      {cond: {status: 5}, to: 'upda', action: [{f: show, a: "john"}, {f: show, a: "lennon"}]},
       // memTans
 
       {event: "john", to: 'upda'}
@@ -96,7 +97,7 @@
     test("Actions on cond state transitions", function(){
       var sm = new StateMachine(states);
       show.reset();
-      strictEqual(show.call, false, "Func ok");
+      strictEqual(show.call, 0, "Func ok");
       sm.stmOnCondition({status: 1});
       strictEqual(sm.stmGetStatus(), 'upda', 'Status OK');
       ok(show.call, "Action called");
@@ -108,7 +109,7 @@
       show.reset();
       sm.stmOnCondition({status: 3});
       strictEqual(sm.stmGetStatus(), 'upda', 'Status OK');
-      equal(show.call, true, "Action called");
+      equal(show.call, 1, "Action called");
       equal(show.arg.length, 1, "Action args one passed");
       equal(show.arg[0], "john", "Action args one value ok");
 
@@ -118,6 +119,17 @@
       ok(show.call, "Action called");
       equal(show.arg.length, 1, "Action args array passed");
       equal(show.arg[0], "john", "Action args array value ok");
+
+    });
+
+    test("Multiple Actions on cond state transitions", function() {
+      var sm = new StateMachine(states);
+      show.reset();
+      sm.stmOnCondition({status: 5});
+      strictEqual(sm.stmGetStatus(), 'upda', 'Status OK');
+      equal(show.call, 2, "Multiple actions called");
+      equal(show.arg.length, 1, "Multiple Actions args one passed");
+      equal(show.arg[0], "lennon", "Multiple Actions args one value ok");
     });
 
 
@@ -163,7 +175,7 @@
       show.reset();
       m.stmOnCondition({status: 5});
       strictEqual(m.stmGetStatus(), 'upda', 'Status OK');
-      equal(show.call, true, "Action called");
+      equal(show.call, 1, "Action called");
       equal(show.arg.length, 1, "Action args one passed");
       equal(show.arg[0], "john", "Action args array value ok");
     });
