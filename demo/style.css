@@ -1,0 +1,9 @@
+#demo { width: 632px; margin: 0 auto; text-align: left; }
+
+#demo #controls { text-align: center; margin: 5px 10px 10px;}
+
+#demo #status { text-align: center; border: 1px solid #999; min-height: 1em;}
+
+#demo #notes   { margin-bottom: 1em; text-align: left; }
+#demo #diagram { width: 400px; height: 275px; }
+#demo #console  { width: 100%;  height: 25em;  }

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Javascript Basos Finite State Machine</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+  <link href="style.css" media="screen, print" rel="stylesheet" type="text/css" />
+</head>
+
+
+<body>
+
+ <div id="demo" class='green'>
+
+    <h1> FSM </h1>
+
+    <div id="controls">
+      <button id="oncond" onclick="sm.stmOnCondition(getCondition());logst();">OnCond</button>
+      <input id="acond" value='{"status": 2}' />
+      <br/ >
+      <button id="onevent" onclick="sm.stmOnEvent(getEvent());logst();">OnEvent</button>
+      <input id="anevent" value="john" />
+
+    </div>
+
+    <div id="status"></div>
+
+    <div id="notes">
+      <p>States and transitions</p>
+      <ul>
+        <li><strong>init:</strong>
+          <ul>
+            <li>COND: {status: 1}, TO "UPDA", ACTION: show</li>
+            <li>COND: {status: 2}, TO "UPDB"</li>
+            <li>EVENT: "john", TO "UPDA"</li>
+          </ul>
+        </li>
+
+        <li><strong>upda:</strong>
+          <ul>
+            <li>COND: {status: *}, TO "UPDB"</li>
+          </ul>
+        </li>
+
+        <li><strong>updb:</strong>
+          <ul>
+            <li>COND: {status: 1} OR {status: 2}, TO "UPDA"</li>
+          </ul>
+        </li>
+
+      </ul>
+    </div>
+
+    <div id="states">
+
+    </div>
+
+    <textarea id="console">
+    </textarea>
+
+  </div>
+
+  <script src="../stm.js"></script>
+  <script type="text/javascript">
+
+  function getEvent() {
+      var e = document.getElementById('anevent').value;
+      return e;
+  }
+
+  function getCondition() {
+    var c = document.getElementById('acond').value;
+    try {
+      c = (typeof JSON !== 'undefined' && JSON.parse && JSON.parse(c));
+    }
+    catch (e) {
+      log("ERROR"+" JSON parse error: "+e+", string: "+c);
+      c = null;
+    }
+    return c;
+  }
+
+  function log(a){
+    typeof console !== 'undefined' && console.log && console.log(a);
+    var loge = document.getElementById('console');
+    loge.innerHTML = a + "\n" + loge.innerHTML;
+  }
+
+  function logst(){
+    var ste = document.getElementById('status');
+    ste.innerHTML = "STATE: "+sm.stmGetStatus();
+  }
+
+  var sm ;
+
+(function() {
+
+    function show(){
+      log("SHOW: ");
+    }
+
+    var states = {
+      'init': [
+        {cond: {status: 1}, to: 'upda', action: show},
+        {cond: {status: 2}, to: 'updb'},
+
+        {event: "john", to: 'upda'}
+      ],
+
+      'updb':[
+        {cond: [{status: 1}, {status: 2}], to: 'upda'}
+      ],
+
+      'upda':[
+        {cond: {status: '*'}, to: 'updb'}
+      ],
+
+      'initial': 'init'
+    };
+
+    sm = new StateMachine(states, log);
+
+    logst();
+    /*
+    sm.stmOnCondition({status: 5});
+
+    sm.stmOnCondition({status: 1});
+
+    sm.stmOnCondition({status: 1});
+
+    sm.stmOnCondition({status: 8});
+    */
+
+
+})();
+  </script>
+</body>
