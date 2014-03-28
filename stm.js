@@ -4,7 +4,7 @@
  * statesSpec:
  *  {<stName>: [<stTransition*>, ...], ...}
  * stTransition in stTransitionCondition, stTransitionEvent
- * actSpec = func || [func, argsAr], to be called with this as ctx
+ * actSpec = func || {f: func, a: argsAr || argOne} ], to be called with this as ctx
  * condSpec = {key: value, ...} conditions to be ANDed checked with data object, strict, depth 1
  * cond could be an array, with conditions ORed
  * stTransitionConditionSpec:
@@ -76,10 +76,7 @@
             f = e[j];
             if (!f.to) throw new Error("Missing 'to' member");
             if (!states[f.to]) throw new Error("State not defined "+f.to);
-            z = f.action;
-            if (StateMachine.isArray(z)) z = z[0];
-            if (typeof z === 'string' && ! (z in this))
-              throw new Error("Member action "+z+" not found");
+            this._stmAction(f.action, true); // dry run
             if ( (z = f.event)) {
               // event transition from this state
               if (StateMachine.isArray(z)) {
@@ -116,15 +113,24 @@
       this.log("stmInit(), initialized, state: "+initial+", nStates: "+c);
     },
 
-    _stmAction: function(fn) {
+    _stmAction: function(fn, dry) {
       var args;
       if (StateMachine.isArray(fn)) {
-        args = StateMachine.isArray(fn[1]) ? fn[1] : [fn[1]];
-        fn = fn[0];
+        for (var i=0, l=fn.length; i<l; i++) {
+          this._stmAction(fn[i], dry);
+        }
+        return;
+      }
+      else if (typeof(fn) === 'object' && fn !== null) {
+        args = StateMachine.isArray(fn.a) ? fn.a : [fn.a];
+        fn = fn.f;
       }
       if (fn) {
         if (typeof fn === 'string') fn = this[fn];
-        fn.apply(this, args);
+        if (fn === undefined)
+          throw new Error("Action function not defined or not member of this");
+        if (!dry)
+          fn.apply(this, args);
       }
     },
 
