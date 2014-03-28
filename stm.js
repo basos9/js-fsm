@@ -20,8 +20,8 @@
  */
 
 (function ModSTM() {
-  function StateMachine(states, initial){
-    this.stmInit(states, initial);
+  function StateMachine(){
+    this.stmInit.apply(this, arguments);
   }
 
   StateMachine.mixin = function(classe) {
@@ -57,10 +57,10 @@
     };
 
   StateMachine.prototype = {
-    stmInit: function (states) {
-      var initial,
-        i, e, j, f, k, z, n;
-      this.log = this.log || function(){};
+    stmInit: function (states, log) {
+      var initial, i, e, j, f, k, z, n,
+        c = 0;
+      this.log = log || this.log || function(){};
 
       this.states = states;
 
@@ -74,7 +74,7 @@
           e._name = i;
           for (j=e.length; j--; ){
             f = e[j];
-            if (!f.to) throw new Error("Missing to member");
+            if (!f.to) throw new Error("Missing 'to' member");
             if (!states[f.to]) throw new Error("State not defined "+f.to);
             z = f.action;
             if (StateMachine.isArray(z)) z = z[0];
@@ -105,6 +105,7 @@
               }
             }
           }
+          c++;
       }
 
       if (! initial || ! initial in states)
@@ -112,6 +113,7 @@
 
       this.currentState = states[initial];
 
+      this.log("stmInit(), initialized, state: "+initial+", nStates: "+c);
     },
 
     _stmAction: function(fn) {
@@ -130,12 +132,12 @@
       var state = this.currentState,
         f;
       if( (f = state._events[e])){
-        this.log("stmOnEvent() > switching to "+f.to+", e: "+e+", from:"+state._name+", action:"+!!f.action);
+        this.log("stmOnEvent() > switching to: "+f.to+", e: "+e+", from: "+state._name+", action: "+!!f.action);
         this.currentState = this.states[f.to] ;
         this._stmAction(f.action);
       }
       else {
-        this.log("stmOnEvent() no switch e: "+e+", from:"+state._name);
+        this.log("stmOnEvent() no switch evt e: "+e+", from: "+state._name);
       }
 
     },
@@ -143,25 +145,26 @@
     stmOnCondition: function(d){
       var state = this.currentState,
           j, f, k, z, has;
-       for (j=state.length; j--; ){
-         f = state[j];
-         if (z = f.cond) {
-           has = true;
-           for (k in z) {
-             if (!(has = has &&
-               (k in d && (z[k] === '*' || z[k] === d[k]))))
+       if (d !== null && typeof d === 'object')
+         for (j=state.length; j--; ){
+           f = state[j];
+           if (z = f.cond) {
+             has = true;
+             for (k in z) {
+               if (!(has = has &&
+                 (k in d && (z[k] === '*' || z[k] === d[k]))))
+                 break;
+             }
+             if (has) {
+               this.log("stmOnCondition() > switching to: "+f.to+", d: "+(typeof JSON !== 'undefined' && JSON.stringify(d))+", from: "+state._name+", action: "+!!f.action);
+               this.currentState = this.states[f.to];
+               this._stmAction(f.action);
                break;
-           }
-           if (has) {
-             this.log("stmOnCondition() > switching to "+f.to+", d: "+(JSON && JSON.stringify(d))+", from:"+state._name+", action:"+!!f.action);
-             this.currentState = this.states[f.to];
-             this._stmAction(f.action);
-             break;
+             }
            }
          }
-       }
        if (!has) {
-         this.log("stmOnCondition() no switch d: "+(JSON && JSON.stringify(d))+", from:"+state._name);
+         this.log("stmOnCondition() no switch cond d: "+(typeof JSON !== 'undefined' && JSON.stringify(d))+", from: "+state._name);
        }
     },
 
