@@ -18,36 +18,40 @@
 
     show.reset();
 
-    var states = {};
+
     var memTans = {cond: {status: 5}, to: 'upda', action: {f: "sjohn", a: "john"}};
-    states['init'] = [
+    var GLOB = StateMachine.GLOB;
+    var states = {
+      'init': [
 
-      {cond: {status: 1}, to: 'upda', action: show},
-      {cond: {status: 2}, to: 'upda'},
-      {cond: {status: 3}, to: 'upda', action: {f: show, a: "john"}},
-      {cond: {status: 4}, to: 'upda', action: {f: show, a: ["john"]}},
-      {cond: {status: 5}, to: 'upda', action: [{f: show, a: "john"}, {f: show, a: "lennon"}]},
-      // memTans
+        {cond: {status: 1}, to: 'upda', action: show},
+        {cond: {status: 2}, to: 'upda'},
+        {cond: {status: 3}, to: 'upda', action: {f: show, a: "john"}},
+        {cond: {status: 4}, to: 'upda', action: {f: show, a: ["john"]}},
+        {cond: {status: 5}, to: 'upda', action: [{f: show, a: "john"}, {f: show, a: "lennon"}]},
+        {cond: {others: 6, __STMGLOB__: 0}, to: 'upda'},
+        // memTans
 
-      {event: "john", to: 'upda'}
-    ];
+        {event: "john", to: 'upda'}
+      ],
 
-    states['updb'] = [
-      {cond: [{status: 1}, {status: 2}], to: 'upda'},
-      {event: ["land", "lond"], to: 'upda'},
-      {event: "rst", to: "init"}
-    ];
-    states['upda'] = [
-      {cond: {trig: 7, lek: 15}, to: 'updb'},
-      {cond: {trig: 10, lek: '*'}, to: 'init'},
-      // WARNING when glob in one argument and other cases
-      {cond: {status: '*'}, to: 'updb'}
+      'upda': [
+        {cond: {trig: 7, lek: 15}, to: 'updb'},
+        {cond: {trig: 10, lek: GLOB}, to: 'init'},
+        // WARNING when glob in one argument and other cases
+        {cond: {status: GLOB}, to: 'updb'},
+        {cond: {status: GLOB}, to: 'updb'}
+      ],
 
-    ];
-    states['initial'] = 'init';
+      'updb': [
+        {cond: [{status: 1}, {status: 2}], to: 'upda'},
+        {event: ["land", "lond"], to: 'upda'},
+        {event: "rst", to: "init"}
+      ],
 
+      'initial': 'init'
 
-
+    };
 
 
     module("StateMachine");
@@ -58,6 +62,8 @@
       strictEqual(sm.stmGetStatus(), 'init', "Intial State should be init");
       sm.stmOnCondition({status: 8});
       strictEqual(sm.stmGetStatus(), 'init', 'Does not switch when condition not found');
+      sm.stmOnCondition({status: 1, nxep: 5});
+      strictEqual(sm.stmGetStatus(), 'init', 'Does not switch when condition has extra args');
       sm.stmOnCondition({status: 1});
       strictEqual(sm.stmGetStatus(), 'upda', 'Switch from one simple condition');
       sm.stmOnCondition({status: 1});
@@ -66,6 +72,8 @@
       strictEqual(sm.stmGetStatus(), 'updb', 'Does not switch when condition not found ORed');
       sm.stmOnCondition({status: 2});
       strictEqual(sm.stmGetStatus(), 'upda', 'Switch from one ORed condition');
+      sm.stmOnCondition({status: 2, notxp: 5});
+      strictEqual(sm.stmGetStatus(), 'upda', 'Does not switch when glob matches but has extra args');
       sm.stmOnCondition({status: 1});
       strictEqual(sm.stmGetStatus(), 'updb', "Prepare state");
       sm.stmOnCondition({status: 1});
@@ -80,6 +88,11 @@
       strictEqual(sm.stmGetStatus(), 'upda', "Prepare state");
       sm.stmOnCondition({trig: 10, lek: 18});
       strictEqual(sm.stmGetStatus(), 'init', 'Switch from ANDed cond with glob');
+      sm.stmOnCondition({others: 7, lek: 10});
+      strictEqual(sm.stmGetStatus(), 'init', 'Does not switch on glob keys when not match');
+      sm.stmOnCondition({others: 6, lek: 10});
+      strictEqual(sm.stmGetStatus(), 'upda', 'Switch from glob keys when provided match');
+
     });
 
     test("Event state transitions", function(){
@@ -145,7 +158,6 @@
 
     K.prototype.sjohn = show;
     StateMachine.mixin(K.prototype);
-    console.log("m");
 
     test("Mixin tests", function() {
       var m = new K();
@@ -173,7 +185,7 @@
     test("Mixin actions", function() {
       var m = new K();
       show.reset();
-      m.stmOnCondition({status: 5});
+      m.stmOnCondition({status: 4});
       strictEqual(m.stmGetStatus(), 'upda', 'Status OK');
       equal(show.call, 1, "Action called");
       equal(show.arg.length, 1, "Action args one passed");
