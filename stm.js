@@ -80,7 +80,7 @@
     stmInit: function (statesDef, log) {
       var initial, i, e, j, f, k, z, n, t,
         // Create new states object (we will mutate some things)
-        states = this.states = {},
+        states = this._stmStates = {},
         c = 0;
 
       function ammendCondCont(f) {
@@ -156,7 +156,7 @@
       if (! initial || ! initial in states)
         throw new Error("initial state ("+initial+") not defined");
 
-      this.currentState = states[initial];
+      this._stmCurrentState = states[initial];
 
       this.log("stmInit(), initialized, state: "+initial+", nStates: "+c);
     },
@@ -183,11 +183,11 @@
     },
 
     stmOnEvent: function(e){
-      var state = this.currentState,
+      var state = this._stmCurrentState,
         f;
       if( (f = state._stmEvents[e])){
         this.log("stmOnEvent() > switching to: "+f.to+", e: "+e+", from: "+state._stmName+", action: "+!!f.action);
-        this.currentState = this.states[f.to] ;
+        this._stmCurrentState = this._stmStates[f.to] ;
         this._stmAction(f.action);
       }
       else {
@@ -197,7 +197,7 @@
     },
 
     stmOnCondition: function(d){
-      var state = this.currentState,
+      var state = this._stmCurrentState,
           GLOB = StateMachine.GLOB,
           j, f, k, z, has, scanGlob, hasGlob;
        if (d !== null && typeof d === 'object') {
@@ -237,7 +237,7 @@
          // if last entry found or a previous glob was found
          if (has || (f = has = hasGlob)) {
            this.log("stmOnCondition() > switching to: "+f.to+", d: "+(typeof JSON !== 'undefined' && JSON.stringify(d))+", from: "+state._stmName+", action: "+!!f.action);
-           this.currentState = this.states[f.to];
+           this._stmCurrentState = this._stmStates[f.to];
            this._stmAction(f.action);
          }
        } // if
@@ -247,7 +247,7 @@
     },
 
     stmGetStatus: function(){
-      return this.currentState._stmName;
+      return this._stmCurrentState._stmName;
     }
   };
 
