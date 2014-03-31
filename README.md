@@ -159,5 +159,8 @@ EXAMPLE
 Changelog
 ---------
 
-#### v0.9
- - Initial commit.
+ - v0.9.1
+   - Fix glob keys has higher lowest priority for cond matches 
+
+ - v0.9
+   - Initial commit.
