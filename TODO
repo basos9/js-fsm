@@ -1,0 +1,7 @@
+TODO fsm-js
+-----------
+ - Write a better demo example, more usefull looking example, add some eye kandy, make a git page out of it.
+ - Add beforeStateChange event with optional cancel function.
+ - Maybe add defered transition function. State will be in a inTrans state until doTransition() is called from some user executing code. This will be integrated with the beforeStateChanged event.
+ - Evaluate if we will integrate event subsyste  or just add seperate callbacks.
+
