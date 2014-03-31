@@ -263,7 +263,7 @@
                   ( ( ( z[k] === GLOB ? scanGlob && !!(hasGlob = f) : // value is glob and scanGlob is true (then save matched, always truthy)
                         z[k] === d[k])))))) // OR value is not glob and value matches data
                  break;
-             }d
+             }
              has = has && // if matched and
               // globKeys specified and scan Glob Keys is true, (save matched, return true), if not scan glob return false
               ( f._stmCondGlobKeys ? scanGlobK && !!(hasGlobK = f) :

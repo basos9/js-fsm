@@ -31,8 +31,8 @@
         {cond: {status: 5}, to: 'upda', action: [{f: show, a: "john"}, {f: show, a: "lennon"}]},
         {cond: {others: 6, __STMGLOB__: 0}, to: 'upda'},
         {cond: {status: 6, __STMGLOB__: 0}, to: 'updb'},
-        {cond: {status: 6, other: GLOB}, to: 'upda'},
-        {cond: {status: 6, aux: 4}, to: 'upda'},
+        {cond: {status: 6, other: GLOB}, to: 'upda'}, // this has higher pri than key glob
+        {cond: {status: 6, aux: 4}, to: 'upda'}, // this has higher pri than key glob
 
         // memTans
 
@@ -112,7 +112,7 @@
       strictEqual(sm.stmGetStatus(), 'init', 'Prepare state');
       sm.stmOnCondition({status: 6, aux: 4});
       strictEqual(sm.stmGetStatus(), 'upda', 'Specific key has higher priority than GLOB keys');
-      sm.stmOnEvent("rst");
+      sm.stmOnCondition({status: 30});
       strictEqual(sm.stmGetStatus(), 'init', 'Prepare state');
       sm.stmOnCondition({status: 6, other: 4});
       strictEqual(sm.stmGetStatus(), 'upda', 'Specific key with glob has higher priority than GLOB keys');
