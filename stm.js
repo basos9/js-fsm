@@ -340,6 +340,7 @@
   //======
   else if (typeof module !== 'undefined' && module.exports !== undefined) {
     module.exports = StateMachine;
+  }
   else if (typeof exports !== 'undefined') {
     exports.StateMachine = StateMachine;
   }
