@@ -30,13 +30,21 @@
         {cond: {status: 4}, to: 'upda', action: {f: show, a: ["john"]}},
         {cond: {status: 5}, to: 'upda', action: [{f: show, a: "john"}, {f: show, a: "lennon"}]},
         {cond: {others: 6, __STMGLOB__: 0}, to: 'upda'},
+        {cond: {status: 6, __STMGLOB__: 0}, to: 'updb'},
+        {cond: {status: 6, other: GLOB}, to: 'upda'},
+        {cond: {status: 6, aux: 4}, to: 'upda'},
+
         // memTans
 
         {event: "john", to: 'upda'}
       ],
 
       'upda': [
-        {cond: {trig: 7, lek: 15}, to: 'updb'},
+        // trig: 10, lek: 7 ==> INIT
+        // trig: 10, lek: 16 ==> UPDB
+        {cond: {trig: 7,  lek: 15}, to: 'updb'},
+        // HERE order matters for GLOBs, first matches
+        {cond: {trig: GLOB, lek: 16}, to: 'updb'},
         {cond: {trig: 10, lek: GLOB}, to: 'init'},
         {cond: {status: 20}, to: 'upda', action: show},
         // WARNING when glob and xtra args exist, no switch
@@ -96,6 +104,18 @@
       strictEqual(sm.stmGetStatus(), 'upda', 'Switch from glob keys when provided match');
       sm.stmOnCondition({status: 30});
       strictEqual(sm.stmGetStatus(), 'init', 'State Transitions Order does not matter');
+      sm.stmOnCondition({status: 2});
+      strictEqual(sm.stmGetStatus(), 'upda', 'Prepare state');
+      sm.stmOnCondition({trig: 10, lek: 16});
+      strictEqual(sm.stmGetStatus(), 'updb', 'For glob order matters');
+      sm.stmOnEvent("rst");
+      strictEqual(sm.stmGetStatus(), 'init', 'Prepare state');
+      sm.stmOnCondition({status: 6, aux: 4});
+      strictEqual(sm.stmGetStatus(), 'upda', 'Specific key has higher priority than GLOB keys');
+      sm.stmOnEvent("rst");
+      strictEqual(sm.stmGetStatus(), 'init', 'Prepare state');
+      sm.stmOnCondition({status: 6, other: 4});
+      strictEqual(sm.stmGetStatus(), 'upda', 'Specific key with glob has higher priority than GLOB keys');
     });
 
     test("Event state transitions", function(){

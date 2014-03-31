@@ -247,10 +247,12 @@
     stmOnCondition: function(d){
       var state = this._stmCurrentState,
           GLOB = StateMachine.GLOB,
-          j, f, k, z, has, scanGlob, hasGlob;
+          j, f, k, z, has, scanGlob, hasGlob, hasGlobK, scanGlobK;
        if (d !== null && typeof d === 'object') {
          scanGlob = true;
          hasGlob = false;
+         scanGlobK = true;
+         hasGlobK = false;
          for (j=state.length; j--; ){
            f = state[j];
            if (z = f.cond) {
@@ -261,29 +263,38 @@
                   ( ( ( z[k] === GLOB ? scanGlob && !!(hasGlob = f) : // value is glob and scanGlob is true (then save matched, always truthy)
                         z[k] === d[k])))))) // OR value is not glob and value matches data
                  break;
-             }
-             // if matched and globKeys not specifies, lengths should match (since all condSpec attrs matched
-             //  if lengths also match (minus glob in condspec) this means that both objects have the same attrs
-             has = has && ( f._stmCondGlobKeys ||
-                StateMachine._keys(d).length === f._stmCondLen);
+             }d
+             has = has && // if matched and
+              // globKeys specified and scan Glob Keys is true, (save matched, return true), if not scan glob return false
+              ( f._stmCondGlobKeys ? scanGlobK && !!(hasGlobK = f) :
+              // else lengths should match (since all condSpec attrs matched if lengths also match (minus glob in condspec) this means that both objects have the same attrs
+              StateMachine._keys(d).length === f._stmCondLen);
+
              if (has) {
                if (hasGlob) {
                  // found with a glob, defer until all other non globs searched
                  scanGlob = false;
+               }
+               else if (hasGlobK) {
+                 // found with a globKey, defer until all others searched
+                 scanGlobK = false;
                }
                else {
                  // switch state
                  break;
                }
              }
-             else if (scanGlob) {
-               // cond does not match, if we scaned for glob reset hasGlob
-               hasGlob = false;
+             else {
+               // cond does not match
+                if (scanGlob) {
+                  // if we scaned for glob reset hasGlob
+                  hasGlob = false;
+                }
              }
            }
          } // for state
          // if last entry found or a previous glob was found
-         if (has || (f = has = hasGlob)) {
+         if (has || (f = has = hasGlob) || (f = has = hasGlobK)) {
            this.log("stmOnCondition() > switching to: "+f.to+", d: "+(typeof JSON !== 'undefined' && JSON.stringify(d))+", from: "+state._stmName+", action: "+!!f.action);
            this._stmCurrentState = this._stmStates[f.to];
            this._stmAction(f.action);
