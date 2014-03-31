@@ -1,17 +1,57 @@
 /**
  * StateMachine with event and conditional transitions
  *
- * statesSpec:
- *  {<stName>: [<stTransition*>, ...], ...}
- * stTransition in stTransitionCondition, stTransitionEvent
- * actSpec = func || {f: func, a: argsAr || argOne} ], to be called with this as ctx
- * condSpec = {key: value, ...} conditions to be ANDed checked with data object, strict, depth 1
- * cond could be an array, with conditions ORed
- * stTransitionConditionSpec:
- *  {cond: <condSpec> || [<condSpec>,..] , to: <stName>, opt action: <actSpec>}
- * event could be an array of events ORed
- * stTransitionEventSpec:
- *  {event: <evtName> || [<evtName>,...], to: <stName>, opt action: <actSpec>}
+    stateSpec::
+    {
+      <stateName>: [
+        <stTransition>,
+        ...
+      ],
+      ....
+      initial: <initStateName>
+    }
+
+    stTransition::
+      <stTransitionCondition> || <stTransitionEvent>
+
+    stTransitionConditionSpec::
+      {
+        cond: <cond> || [ <cond>,.. ],
+        to: <stName>,
+        OPT action: <actMult>
+      }
+      NOTE: When `cond` is an array, condSpecs are ORed
+
+
+    stTransitionEventSpec::
+      {
+        event: <evtName> || [<evtName>,...],
+        to: <stName>,
+        opt action: <actMult>
+      }
+      NOTE: When `event` is an array, evtNames are ORed
+
+    actMultSpec::
+      <act> || [ <act>, ...]
+      NOTE: When actSpecMult is an array, actSpecs are called in order
+
+    actSpec::
+      <func> || { f: <func>, a: argsAr || argOne} ]
+      NOTE: A function to be called with this as ctx.
+      NOTE: When providing args the `a` member can be an array (of arguments to apply) or any other type to denote a single argument.
+
+    funcSpec::
+      <functionRef> || <methodNameOfThis>
+      NOTE: When <funcSpec> is string it refers to a method of this (this.<methodNameOfThis>)
+
+    condSpec::
+     {
+       <key>: <value>,
+       ...
+     }
+     NOTE: conditions to be ANDed checked with data object, strict, depth 1
+     NOTE: `value` can be StateMachine.GLOB, to match any value
+     NOTE: `key` can be StateMachine.GLOB, to mach any keys. To define an condSpec literal use the actual value of StateMachine.GLOB = "__STMGLOB__"
  * e.g.
  * states['init'] = [
  *       {cond: {status: 1}, to: 'upda', action: show},
@@ -20,10 +60,22 @@
  */
 
 (function ModSTM() {
+
+  var ver = '0.9'
+
+  /**
+   * Constructor
+   * @see this.initStm for parameters
+   */
   function StateMachine(){
     this.stmInit.apply(this, arguments);
   }
 
+  /**
+   * Mix the sta functionality (protytype) to the given object. All statemachine
+   * attribs/methods are stm or _stm prefixed
+   * @param classe object or function's prototype to extend
+   */
   StateMachine.mixin = function(classe) {
     for (var i in StateMachine.prototype) {
       if (! this.prototype.hasOwnProperty(i))
@@ -32,25 +84,28 @@
     }
   };
 
+  /**
+   * Reference to the glob string literal.
+   */
   StateMachine.GLOB =  '__STMGLOB__';
 
-   /**
-   * isArray shim
+  /**
+   * isArray shim or Array.isArray if defined, used internally
    * @param value mixed
    * @returns {Boolean}
    */
-  StateMachine.isArray = typeof Array.isArray !== 'undefined' ? Array.isArray :
+  StateMachine._isArray = typeof Array.isArray !== 'undefined' ? Array.isArray :
     function(value) {
       return value != null && Object.prototype.toString.call(value) === '[object Array]'; // undef or null
     }; // end Array.isArray
 
   /**
-   * Object create shim
+   * Object create shim or Object.create if defined, used internally
    * Creates a prototype clone of the source object
    * @param o source Object
    * @return Object a new object
    */
-  StateMachine.create = typeof Object.create !== 'undefined' ? Object.create :
+  StateMachine._create = typeof Object.create !== 'undefined' ? Object.create :
     function(o) {
       var Func;
       Func = function() {};
@@ -59,10 +114,11 @@
     };
 
   /**
-   * Object.keys() shim
-   * Get an array of an Object's keys
+   * Object.keys() shim or Object.keys if defined, used internally
+   * @param o Object
+   * @return array of Object's keys
    */
-  StateMachine.keys = typeof Object.keys !== 'undefined' ? Object.keys :
+  StateMachine._keys = typeof Object.keys !== 'undefined' ? Object.keys :
     function (o) {
       var i,
         keys = [],
@@ -75,8 +131,14 @@
       return keys;
     }; // end function Object.keys
 
-  StateMachine.prototype = {
 
+  StateMachine.prototype = {
+    /**
+     * Intialize state machine, called from constructor.
+     * Call it manually when stm is mixed in an existing object
+     * @param statesDef object of states definitions, @see documentation
+     * @log OPT function(a) that logs to the console.
+     */
     stmInit: function (statesDef, log) {
       var initial, i, e, j, f, k, z, n, t,
         // Create new states object (we will mutate some things)
@@ -98,7 +160,7 @@
            // f.cond = z = StateMachine.create(z); //clone
            // z[StateMachine.GLOB] = undefined; // mask glob
         }
-        f._stmCondLen = StateMachine.keys(z).length;
+        f._stmCondLen = StateMachine._keys(z).length;
         f._stmCondGlobKeys = globKeys;
       }
 
@@ -120,7 +182,7 @@
             this._stmAction(f.action, true); // dry run
             if ( (z = f.event)) {
               // event transition from this state
-              if (StateMachine.isArray(z)) {
+              if (StateMachine._isArray(z)) {
                 for (k=z.length; k--; ) {
                   t._stmEvents[z[k]] = f;
                 }
@@ -131,9 +193,9 @@
               //DONT MODIFY ORIGINAL e.splice(j, 1); // splice ok on reverse read array
             }
             else if ((z = f.cond)) {
-              if (StateMachine.isArray(z)) {
+              if (StateMachine._isArray(z)) {
                 for (k=z.length; k--; ) {
-                  n = StateMachine.create(f); // clone proto
+                  n = StateMachine._create(f); // clone proto
                   n.cond = z[k]; // mask cond
                   ammendCondCont(n);
                   //DONT MOD ORIGINAL e.push(n); //  append ok on reverse read array
@@ -144,7 +206,7 @@
                 // DONT MOD ORIGINAL e.splice(j, 1); // splice ok on reverse read array
               }
               else {
-                n = StateMachine.create(f);
+                n = StateMachine._create(f);
                 ammendCondCont(f);
                 t.push(f);
               }
@@ -158,30 +220,13 @@
 
       this._stmCurrentState = states[initial];
 
-      this.log("stmInit(), initialized, state: "+initial+", nStates: "+c);
+      this.log("stmInit(), initialized, v: "+ver+", init state: "+initial+", nStates: "+c);
     },
 
-    _stmAction: function(fn, dry) {
-      var args;
-      if (StateMachine.isArray(fn)) {
-        for (var i=0, l=fn.length; i<l; i++) {
-          this._stmAction(fn[i], dry);
-        }
-        return;
-      }
-      else if (typeof(fn) === 'object' && fn !== null) {
-        args = StateMachine.isArray(fn.a) ? fn.a : [fn.a];
-        fn = fn.f;
-      }
-      if (fn) {
-        if (typeof fn === 'string') fn = this[fn];
-        if (fn === undefined)
-          throw new Error("Action function not defined or not member of this");
-        if (!dry)
-          fn.apply(this, args);
-      }
-    },
-
+    /**
+     * Trigger an event transition (if applicable)
+     * @param e string an event name
+     */
     stmOnEvent: function(e){
       var state = this._stmCurrentState,
         f;
@@ -193,9 +238,12 @@
       else {
         this.log("stmOnEvent() no switch evt e: "+e+", from: "+state._stmName);
       }
-
     },
 
+    /**
+     * Trigger a condition based transition (if applicable)
+     * @param d Object condition object, @see documentation
+     */
     stmOnCondition: function(d){
       var state = this._stmCurrentState,
           GLOB = StateMachine.GLOB,
@@ -217,7 +265,7 @@
              // if matched and globKeys not specifies, lengths should match (since all condSpec attrs matched
              //  if lengths also match (minus glob in condspec) this means that both objects have the same attrs
              has = has && ( f._stmCondGlobKeys ||
-                StateMachine.keys(d).length === f._stmCondLen);
+                StateMachine._keys(d).length === f._stmCondLen);
              if (has) {
                if (hasGlob) {
                  // found with a glob, defer until all other non globs searched
@@ -246,8 +294,36 @@
        }
     },
 
+    /**
+     * @return string current state's name
+     */
     stmGetStatus: function(){
       return this._stmCurrentState._stmName;
+    },
+
+    /**
+     * PRIVATE
+     * Check call a transition action
+     */
+    _stmAction: function(fn, dry) {
+      var args;
+      if (StateMachine._isArray(fn)) {
+        for (var i=0, l=fn.length; i<l; i++) {
+          this._stmAction(fn[i], dry);
+        }
+        return;
+      }
+      else if (typeof(fn) === 'object' && fn !== null) {
+        args = StateMachine._isArray(fn.a) ? fn.a : [fn.a];
+        fn = fn.f;
+      }
+      if (fn) {
+        if (typeof fn === 'string') fn = this[fn];
+        if (fn === undefined)
+          throw new Error("Action function not defined or not member of this");
+        if (!dry)
+          fn.apply(this, args);
+      }
     }
   };
 
@@ -262,11 +338,10 @@
   //======
   // NODE
   //======
+  else if (typeof module !== 'undefined' && module.exports !== undefined) {
+    module.exports = StateMachine;
   else if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = StateMachine;
-    }
-    // exports.StateMachine = StateMachine;
+    exports.StateMachine = StateMachine;
   }
   //========
   // BROWSER
