@@ -154,3 +154,10 @@ EXAMPLE
     };
     
     var sm = new StateMachine(states);
+
+
+Changelog
+---------
+
+#### v0.9
+ - Initial commit.
