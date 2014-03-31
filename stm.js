@@ -61,7 +61,7 @@
 
 (function ModSTM() {
 
-  var ver = '0.9'
+  var ver = '0.9.1'
 
   /**
    * Constructor
