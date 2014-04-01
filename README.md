@@ -52,8 +52,8 @@ Transition to a state if applicable.
 
 **this.stmGetStatus()**  
 Get the current state name.
-* Return String. current state name. 
 NOTE: Type is string even if stateId is Number or other type. Use loose equal operator (==).
+* Return String. Current state name. 
 
  
 States Spec
