@@ -110,7 +110,8 @@ States Spec
      NOTE: conditions to be ANDed checked with data object, strict, depth 1
      NOTE: `value` can be StateMachine.GLOB, to match any value
      NOTE: `key` can be StateMachine.GLOB, to mach any keys. To define an condSpec literal use the actual value of StateMachine.GLOB = "__STMGLOB__"
-
+     NOTE: Condition matching priority is specific key: specific value > specific key: glob value > glob key
+     NOTE: When defining conditions with glob values or keys, order of the <stTransitionCondition> matters. Earlier has higher priority.
 
 
   
