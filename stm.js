@@ -61,7 +61,7 @@
 
 (function ModSTM() {
 
-  var ver = '0.9.2'
+  var ver = '0.9.3'
 
   /**
    * Constructor
@@ -220,7 +220,7 @@
 
       this._stmCurrentState = states[initial];
 
-      this.log("stmInit(), initialized, v: "+ver+", init state: "+initial+", nStates: "+c);
+      this.log("stmInit(), js-fsm initialized, v: "+ver+", init state: "+initial+", nStates: "+c);
     },
 
     /**
