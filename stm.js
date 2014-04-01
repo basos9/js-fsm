@@ -174,7 +174,7 @@
           e = statesDef[i];
           t = states[i] = []; // state def (array of transitions)
           t._stmEvents = {}; // events prop
-          t._stmName = i; // name prop
+          t._stmName = i; // name prop  // NOTE: Implicit type cast to string
           for (j=e.length; j--; ){
             f = e[j];
             if (f.to === undefined) throw new Error("Missing 'to' member");
