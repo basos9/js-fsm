@@ -61,7 +61,7 @@
 
 (function ModSTM() {
 
-  var ver = '0.9.1'
+  var ver = '0.9.2'
 
   /**
    * Constructor
@@ -177,7 +177,7 @@
           t._stmName = i; // name prop
           for (j=e.length; j--; ){
             f = e[j];
-            if (!f.to) throw new Error("Missing 'to' member");
+            if (f.to === undefined) throw new Error("Missing 'to' member");
             if (!statesDef[f.to]) throw new Error("State not defined "+f.to);
             this._stmAction(f.action, true); // dry run
             if ( (z = f.event)) {
@@ -215,7 +215,7 @@
           c++;
       }
 
-      if (! initial || ! initial in states)
+      if ( initial === undefined || ! initial in states)
         throw new Error("initial state ("+initial+") not defined");
 
       this._stmCurrentState = states[initial];
