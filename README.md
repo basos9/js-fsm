@@ -96,11 +96,13 @@ States Spec
     actSpec::
       <func> || { f: <func>, a: argsAr || argOne} ]
       NOTE: A function to be called with this as ctx.
-      NOTE: When providing args the `a` member can be an array (of arguments to apply) or any other type to denote a single argument.
+      NOTE: When providing args the `a` member can be an array (of arguments to apply) 
+            or any other type to denote a single argument.
     
     funcSpec::
       <functionRef> || <methodNameOfThis>
-      NOTE: When <funcSpec> is string it refers to a method of this (this.<methodNameOfThis>)
+      NOTE: When <funcSpec> is string it refers to a method of this 
+            (this.<methodNameOfThis>)
       
     condSpec::
      { 
@@ -109,12 +111,12 @@ States Spec
      } 
      NOTE: conditions to be ANDed checked with data object, strict, depth 1
      NOTE: `value` can be StateMachine.GLOB, to match any value
-     NOTE: `key` can be StateMachine.GLOB, to mach any keys. To define an condSpec literal use the actual value of StateMachine.GLOB = "__STMGLOB__"
-     NOTE: Condition matching priority is specific key: specific value > specific key: glob value > glob key
-     NOTE: When defining conditions with glob values or keys, order of the <stTransitionCondition> matters. Earlier has higher priority.
-
-
-  
+     NOTE: `key` can be StateMachine.GLOB, to mach any keys. To define an condSpec 
+            literal use the actual value of StateMachine.GLOB = "__STMGLOB__"
+     NOTE: Condition matching priority is specific key: specific value > specific key: 
+           glob value > glob key
+     NOTE: When defining conditions with glob values or keys, order of the 
+          <stTransitionCondition> matters. Earlier has higher priority.
 
 
 
